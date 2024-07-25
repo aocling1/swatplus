@@ -1,50 +1,32 @@
-      subroutine xmon (jd, mo, day_mo)
+!Change in time_read.f90 from call xmon (time%day_start, mo, day_mo) to call xmon (time%day_start,time%year_start, mo, day_mo)
+!Distinguishing between equal and leap years
+subroutine xmon(jd, year, mo, day_mo)
+    use time_module
+    use input_file_module
+    implicit none
+    integer, intent(in) :: jd, year
+    integer, intent(out) :: mo, day_mo
+    integer :: i_mo, m1, nda
 
-!!    ~ ~ ~ PURPOSE ~ ~ ~
-!!    this subroutine determines the month, given the julian date and leap
-!!    year flag
-
-!!    ~ ~ ~ INCOMING VARIABLES ~ ~ ~
-!!    name        |units         |definition
-!!    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-!!    ndays(:)    |julian date   |julian date for last day of preceding
-!!                               |month (where the array location is the
-!!                               |number of the month). The dates are for
-!!                               |leap years
-!!    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-!!    ~ ~ ~ OUTGOING VARIABLES ~ ~ ~
-!!    name        |units         |definition
-!!    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-!!    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-!!    ~ ~ ~ LOCAL DEFINITIONS ~ ~ ~
-!!    name        |units         |definition
-!!    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-!!    ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-!!    ~ ~ ~ ~ ~ ~ END SPECIFICATIONS ~ ~ ~ ~ ~ ~
-
-      use time_module
-      
-      implicit none
-
-      integer, intent (in)  :: jd
-      integer, intent (out)  :: mo
-      integer, intent (out)  :: day_mo
-      integer :: m1                !none          |array location (see definition of ndays)
-      integer :: nda               !julian date   |julian date of last day in the month
-      integer :: i_mo              !none          |counter
-
-        do i_mo = 1, 12
-          m1 = i_mo + 1
-          nda = ndays(m1)
-          if (jd <= nda) then
-            mo = i_mo
-            day_mo = jd - ndays(i_mo)
-            return
-          end if
-        end do
-
-      return
-      end subroutine xmon
+    if ((mod(year, 4) == 0 .and. mod(year, 100) /= 0) .or. mod(year, 400) == 0) then
+          do i_mo = 1, 12
+              m1 = i_mo + 1
+              nda = ndays(m1)
+              if (jd <= nda) then
+                  mo = i_mo
+                  day_mo = jd - ndays(i_mo)
+                  return
+              end if
+          end do
+    else
+          do i_mo = 1, 12
+              m1 = i_mo + 1
+              nda = ndays_noleap(m1)
+              if (jd <= nda) then
+                  mo = i_mo
+                  day_mo = jd - ndays_noleap(i_mo)
+                  return
+              end if
+          end do
+    end if
+end subroutine xmon
